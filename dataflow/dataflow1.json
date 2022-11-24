@@ -1,0 +1,108 @@
+{
+	"name": "dataflow1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "EMPLOYEE",
+						"type": "DatasetReference"
+					},
+					"name": "employeesource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DelimitedText2",
+						"type": "DatasetReference"
+					},
+					"name": "tablewithinvalidphnnumbers"
+				},
+				{
+					"dataset": {
+						"referenceName": "DelimitedText3",
+						"type": "DatasetReference"
+					},
+					"name": "tablewithvalidphnnumber"
+				}
+			],
+			"transformations": [
+				{
+					"name": "validatedata"
+				},
+				{
+					"name": "split"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          EMPLOYEE_ID as string,",
+				"          FIRST_NAME as string,",
+				"          LAST_NAME as string,",
+				"          EMAIL as string,",
+				"          PHONE_NUMBER as string,",
+				"          HIRE_DATE as string,",
+				"          JOB_ID as string,",
+				"          SALARY as string,",
+				"          COMMISSION_PCT as string,",
+				"          MANAGER_ID as string,",
+				"          DEPARTMENT_ID as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> employeesource",
+				"employeesource assert(expectTrue(regexMatch(PHONE_NUMBER, '^\\\\d{3}[.]\\\\d{3}[.]\\\\d{4}$'), false, 'phnfilter', null, 'validate phn no')) ~> validatedata",
+				"validatedata split(hasError('phnfilter'),",
+				"     disjoint: false) ~> split@(invalidphonenumber, validphonenumbers)",
+				"split@invalidphonenumber sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Series_reference as string,",
+				"          Period as string,",
+				"          Data_value as string,",
+				"          Suppressed as string,",
+				"          STATUS as string,",
+				"          UNITS as string,",
+				"          Magnitude as string,",
+				"          Subject as string,",
+				"          Group as string,",
+				"          Series_title_1 as string,",
+				"          Series_title_2 as string,",
+				"          Series_title_3 as string,",
+				"          Series_title_4 as string,",
+				"          Series_title_5 as string",
+				"     ),",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> tablewithinvalidphnnumbers",
+				"split@validphonenumbers sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Series_reference as string,",
+				"          Period as string,",
+				"          Data_value as string,",
+				"          Suppressed as string,",
+				"          STATUS as string,",
+				"          UNITS as string,",
+				"          Magnitude as string,",
+				"          Subject as string,",
+				"          Group as string,",
+				"          Series_title_1 as string,",
+				"          Series_title_2 as string,",
+				"          Series_title_3 as string,",
+				"          Series_title_4 as string,",
+				"          Series_title_5 as string",
+				"     ),",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> tablewithvalidphnnumber"
+			]
+		}
+	}
+}
