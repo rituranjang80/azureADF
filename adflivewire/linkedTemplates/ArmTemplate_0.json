@@ -125,7 +125,6 @@
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobFSLocation",
-						"fileName": "employeesuodated.csv",
 						"folderPath": "MLdata",
 						"fileSystem": "dldemofilesystem"
 					},
@@ -211,7 +210,6 @@
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobFSLocation",
-						"fileName": "employeesupdatedfalse.csv",
 						"folderPath": "MLdata",
 						"fileSystem": "dldemofilesystem"
 					},
@@ -887,11 +885,13 @@
 						"          Series_title_4 as string,",
 						"          Series_title_5 as string",
 						"     ),",
+						"     partitionFileNames:['employeewrongphnnumber'],",
 						"     umask: 0022,",
 						"     preCommands: [],",
 						"     postCommands: [],",
 						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> tablewithinvalidphnnumbers",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> tablewithinvalidphnnumbers",
 						"split@validphonenumbers sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     input(",
@@ -910,11 +910,13 @@
 						"          Series_title_4 as string,",
 						"          Series_title_5 as string",
 						"     ),",
+						"     partitionFileNames:['employeevalidphnnumber'],",
 						"     umask: 0022,",
 						"     preCommands: [],",
 						"     postCommands: [],",
 						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> tablewithvalidphnnumber"
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> tablewithvalidphnnumber"
 					]
 				}
 			},
