@@ -1,5 +1,5 @@
 {
-	"name": "dataflow1",
+	"name": "assertvalidation",
 	"properties": {
 		"type": "MappingDataFlow",
 		"typeProperties": {
@@ -15,17 +15,17 @@
 			"sinks": [
 				{
 					"dataset": {
-						"referenceName": "DelimitedText2",
+						"referenceName": "haserror",
 						"type": "DatasetReference"
 					},
-					"name": "tablewithinvalidphnnumbers"
+					"name": "sink1"
 				},
 				{
 					"dataset": {
-						"referenceName": "DelimitedText3",
+						"referenceName": "noerroredfile",
 						"type": "DatasetReference"
 					},
-					"name": "tablewithvalidphnnumber"
+					"name": "noerrored"
 				}
 			],
 			"transformations": [
@@ -58,58 +58,26 @@
 				"     ignoreNoFilesFound: false) ~> employeesource",
 				"employeesource assert(expectTrue(regexMatch(PHONE_NUMBER, '^\\\\d{3}[.]\\\\d{3}[.]\\\\d{4}$'), false, 'phnfilter', null, 'validate phn no')) ~> validatedata",
 				"derivedColumnForError split(HasErrorCoulam==true(),",
-				"     disjoint: false) ~> split@(invalidphonenumber, validphonenumbers)",
+				"     disjoint: false) ~> split@(invalidphonenumber, validphonenumber)",
 				"validatedata derive(HasErrorCoulam = isError()) ~> derivedColumnForError",
 				"split@invalidphonenumber sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     input(",
-				"          Series_reference as string,",
-				"          Period as string,",
-				"          Data_value as string,",
-				"          Suppressed as string,",
-				"          STATUS as string,",
-				"          UNITS as string,",
-				"          Magnitude as string,",
-				"          Subject as string,",
-				"          Group as string,",
-				"          Series_title_1 as string,",
-				"          Series_title_2 as string,",
-				"          Series_title_3 as string,",
-				"          Series_title_4 as string,",
-				"          Series_title_5 as string",
-				"     ),",
-				"     partitionFileNames:['employeewrongphnnumber.csv'],",
+				"     partitionFileNames:['erroredfile.csv'],",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     partitionBy('hash', 1)) ~> tablewithinvalidphnnumbers",
-				"split@validphonenumbers sink(allowSchemaDrift: true,",
+				"     partitionBy('hash', 1)) ~> sink1",
+				"split@validphonenumber sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     input(",
-				"          Series_reference as string,",
-				"          Period as string,",
-				"          Data_value as string,",
-				"          Suppressed as string,",
-				"          STATUS as string,",
-				"          UNITS as string,",
-				"          Magnitude as string,",
-				"          Subject as string,",
-				"          Group as string,",
-				"          Series_title_1 as string,",
-				"          Series_title_2 as string,",
-				"          Series_title_3 as string,",
-				"          Series_title_4 as string,",
-				"          Series_title_5 as string",
-				"     ),",
-				"     partitionFileNames:['employeevalidphnnumber.csv'],",
+				"     partitionFileNames:['noerrored.csv'],",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     partitionBy('hash', 1)) ~> tablewithvalidphnnumber"
+				"     partitionBy('hash', 1)) ~> noerrored"
 			]
 		}
 	}
