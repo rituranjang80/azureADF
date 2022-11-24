@@ -84,7 +84,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "dataflow1",
+						"referenceName": "assertvalidation",
 						"type": "DataFlowReference"
 					},
 					"compute": {
