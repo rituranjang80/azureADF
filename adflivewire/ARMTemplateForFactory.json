@@ -1,0 +1,1047 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adflivewire"
+		},
+		"AzureDataLakeStorage1_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'AzureDataLakeStorage1'"
+		},
+		"AzureDataLakeStorage1_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://dldemoaccount.dfs.core.windows.net/"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"wildcardFileName": "*",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "source_input",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "data_sink",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/source_input')]",
+				"[concat(variables('factoryId'), '/datasets/data_sink')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline1_addnewcoulam')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy_soure_to_sink",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"additionalColumns": [
+									{
+										"name": "load_date",
+										"value": {
+											"value": "@utcnow()",
+											"type": "Expression"
+										}
+									}
+								],
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"wildcardFileName": "*",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "source_input",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "data_sink",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Data flow1",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "dataflow1",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"employeesource": {},
+									"tablewithinvalidphnnumbers": {},
+									"tablewithvalidphnnumber": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-11-22T12:02:55Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/source_input')]",
+				"[concat(variables('factoryId'), '/datasets/data_sink')]",
+				"[concat(variables('factoryId'), '/dataflows/dataflow1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline2')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"wildcardFileName": "*",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "source_input",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "data_sink",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/source_input')]",
+				"[concat(variables('factoryId'), '/datasets/data_sink')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline3')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"wildcardFileName": "*",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "source_input",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "data_sink",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/source_input')]",
+				"[concat(variables('factoryId'), '/datasets/data_sink')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DelimitedText1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "employees.csv",
+						"folderPath": "MLdata",
+						"fileSystem": "dldemofilesystem"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "EMPLOYEE_ID",
+						"type": "String"
+					},
+					{
+						"name": "FIRST_NAME",
+						"type": "String"
+					},
+					{
+						"name": "LAST_NAME",
+						"type": "String"
+					},
+					{
+						"name": "EMAIL",
+						"type": "String"
+					},
+					{
+						"name": "PHONE_NUMBER",
+						"type": "String"
+					},
+					{
+						"name": "HIRE_DATE",
+						"type": "String"
+					},
+					{
+						"name": "JOB_ID",
+						"type": "String"
+					},
+					{
+						"name": "SALARY",
+						"type": "String"
+					},
+					{
+						"name": "COMMISSION_PCT",
+						"type": "String"
+					},
+					{
+						"name": "MANAGER_ID",
+						"type": "String"
+					},
+					{
+						"name": "DEPARTMENT_ID",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DelimitedText2')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "MLdata",
+						"fileSystem": "dldemofilesystem"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "Series_reference",
+						"type": "String"
+					},
+					{
+						"name": "Period",
+						"type": "String"
+					},
+					{
+						"name": "Data_value",
+						"type": "String"
+					},
+					{
+						"name": "Suppressed",
+						"type": "String"
+					},
+					{
+						"name": "STATUS",
+						"type": "String"
+					},
+					{
+						"name": "UNITS",
+						"type": "String"
+					},
+					{
+						"name": "Magnitude",
+						"type": "String"
+					},
+					{
+						"name": "Subject",
+						"type": "String"
+					},
+					{
+						"name": "Group",
+						"type": "String"
+					},
+					{
+						"name": "Series_title_1",
+						"type": "String"
+					},
+					{
+						"name": "Series_title_2",
+						"type": "String"
+					},
+					{
+						"name": "Series_title_3",
+						"type": "String"
+					},
+					{
+						"name": "Series_title_4",
+						"type": "String"
+					},
+					{
+						"name": "Series_title_5",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DelimitedText3')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "MLdata",
+						"fileSystem": "dldemofilesystem"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "Series_reference",
+						"type": "String"
+					},
+					{
+						"name": "Period",
+						"type": "String"
+					},
+					{
+						"name": "Data_value",
+						"type": "String"
+					},
+					{
+						"name": "Suppressed",
+						"type": "String"
+					},
+					{
+						"name": "STATUS",
+						"type": "String"
+					},
+					{
+						"name": "UNITS",
+						"type": "String"
+					},
+					{
+						"name": "Magnitude",
+						"type": "String"
+					},
+					{
+						"name": "Subject",
+						"type": "String"
+					},
+					{
+						"name": "Group",
+						"type": "String"
+					},
+					{
+						"name": "Series_title_1",
+						"type": "String"
+					},
+					{
+						"name": "Series_title_2",
+						"type": "String"
+					},
+					{
+						"name": "Series_title_3",
+						"type": "String"
+					},
+					{
+						"name": "Series_title_4",
+						"type": "String"
+					},
+					{
+						"name": "Series_title_5",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/EMPLOYEE')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "employees.csv",
+						"folderPath": "MLdata",
+						"fileSystem": "dldemofilesystem"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "EMPLOYEE_ID",
+						"type": "String"
+					},
+					{
+						"name": "FIRST_NAME",
+						"type": "String"
+					},
+					{
+						"name": "LAST_NAME",
+						"type": "String"
+					},
+					{
+						"name": "EMAIL",
+						"type": "String"
+					},
+					{
+						"name": "PHONE_NUMBER",
+						"type": "String"
+					},
+					{
+						"name": "HIRE_DATE",
+						"type": "String"
+					},
+					{
+						"name": "JOB_ID",
+						"type": "String"
+					},
+					{
+						"name": "SALARY",
+						"type": "String"
+					},
+					{
+						"name": "COMMISSION_PCT",
+						"type": "String"
+					},
+					{
+						"name": "MANAGER_ID",
+						"type": "String"
+					},
+					{
+						"name": "DEPARTMENT_ID",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/data_sink')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "pipelinedemo1"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "output"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/employees')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "employees.csv",
+						"folderPath": "MLdata",
+						"fileSystem": "dldemofilesystem"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "EMPLOYEE_ID",
+						"type": "String"
+					},
+					{
+						"name": "FIRST_NAME",
+						"type": "String"
+					},
+					{
+						"name": "LAST_NAME",
+						"type": "String"
+					},
+					{
+						"name": "EMAIL",
+						"type": "String"
+					},
+					{
+						"name": "PHONE_NUMBER",
+						"type": "String"
+					},
+					{
+						"name": "HIRE_DATE",
+						"type": "String"
+					},
+					{
+						"name": "JOB_ID",
+						"type": "String"
+					},
+					{
+						"name": "SALARY",
+						"type": "String"
+					},
+					{
+						"name": "COMMISSION_PCT",
+						"type": "String"
+					},
+					{
+						"name": "MANAGER_ID",
+						"type": "String"
+					},
+					{
+						"name": "DEPARTMENT_ID",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/employees1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "employees.csv",
+						"folderPath": "MLdata",
+						"fileSystem": "dldemofilesystem"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/source_input')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "pipelinedemo1"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "input"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureDataLakeStorage1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('AzureDataLakeStorage1_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('AzureDataLakeStorage1_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "EMPLOYEE",
+								"type": "DatasetReference"
+							},
+							"name": "employeesource"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DelimitedText2",
+								"type": "DatasetReference"
+							},
+							"name": "tablewithinvalidphnnumbers"
+						},
+						{
+							"dataset": {
+								"referenceName": "DelimitedText3",
+								"type": "DatasetReference"
+							},
+							"name": "tablewithvalidphnnumber"
+						}
+					],
+					"transformations": [
+						{
+							"name": "validatedata"
+						},
+						{
+							"name": "split"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          EMPLOYEE_ID as string,",
+						"          FIRST_NAME as string,",
+						"          LAST_NAME as string,",
+						"          EMAIL as string,",
+						"          PHONE_NUMBER as string,",
+						"          HIRE_DATE as string,",
+						"          JOB_ID as string,",
+						"          SALARY as string,",
+						"          COMMISSION_PCT as string,",
+						"          MANAGER_ID as string,",
+						"          DEPARTMENT_ID as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> employeesource",
+						"employeesource assert(expectTrue(regexMatch(PHONE_NUMBER, '^\\\\d{3}[.]\\\\d{3}[.]\\\\d{4}$'), false, 'phnfilter', null, 'validate phn no')) ~> validatedata",
+						"validatedata split(hasError('phnfilter'),",
+						"     disjoint: false) ~> split@(invalidphonenumber, validphonenumbers)",
+						"split@invalidphonenumber sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          Series_reference as string,",
+						"          Period as string,",
+						"          Data_value as string,",
+						"          Suppressed as string,",
+						"          STATUS as string,",
+						"          UNITS as string,",
+						"          Magnitude as string,",
+						"          Subject as string,",
+						"          Group as string,",
+						"          Series_title_1 as string,",
+						"          Series_title_2 as string,",
+						"          Series_title_3 as string,",
+						"          Series_title_4 as string,",
+						"          Series_title_5 as string",
+						"     ),",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> tablewithinvalidphnnumbers",
+						"split@validphonenumbers sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          Series_reference as string,",
+						"          Period as string,",
+						"          Data_value as string,",
+						"          Suppressed as string,",
+						"          STATUS as string,",
+						"          UNITS as string,",
+						"          Magnitude as string,",
+						"          Subject as string,",
+						"          Group as string,",
+						"          Series_title_1 as string,",
+						"          Series_title_2 as string,",
+						"          Series_title_3 as string,",
+						"          Series_title_4 as string,",
+						"          Series_title_5 as string",
+						"     ),",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> tablewithvalidphnnumber"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/EMPLOYEE')]",
+				"[concat(variables('factoryId'), '/datasets/DelimitedText2')]",
+				"[concat(variables('factoryId'), '/datasets/DelimitedText3')]"
+			]
+		}
+	]
+}
