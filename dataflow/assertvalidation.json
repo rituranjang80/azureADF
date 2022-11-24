@@ -15,14 +15,14 @@
 			"sinks": [
 				{
 					"dataset": {
-						"referenceName": "haserror",
+						"referenceName": "invaildPhone",
 						"type": "DatasetReference"
 					},
 					"name": "sink1"
 				},
 				{
 					"dataset": {
-						"referenceName": "noerroredfile",
+						"referenceName": "ADKpipelineOutput",
 						"type": "DatasetReference"
 					},
 					"name": "noerrored"
