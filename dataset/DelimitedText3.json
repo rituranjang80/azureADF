@@ -10,7 +10,6 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": "employeesupdatedfalse.csv",
 				"folderPath": "MLdata",
 				"fileSystem": "dldemofilesystem"
 			},
