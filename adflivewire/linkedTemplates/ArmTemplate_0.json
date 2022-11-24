@@ -522,6 +522,62 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/haserror')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "MLdata/output",
+						"fileSystem": "dldemofilesystem"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/noerroredfile')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "MLdata/output",
+						"fileSystem": "dldemofilesystem"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/source_input')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -808,7 +864,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
+			"name": "[concat(parameters('factoryName'), '/assertvalidation')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -826,17 +882,17 @@
 					"sinks": [
 						{
 							"dataset": {
-								"referenceName": "DelimitedText2",
+								"referenceName": "haserror",
 								"type": "DatasetReference"
 							},
-							"name": "tablewithinvalidphnnumbers"
+							"name": "sink1"
 						},
 						{
 							"dataset": {
-								"referenceName": "DelimitedText3",
+								"referenceName": "noerroredfile",
 								"type": "DatasetReference"
 							},
-							"name": "tablewithvalidphnnumber"
+							"name": "noerrored"
 						}
 					],
 					"transformations": [
@@ -845,6 +901,9 @@
 						},
 						{
 							"name": "split"
+						},
+						{
+							"name": "derivedColumnForError"
 						}
 					],
 					"scriptLines": [
@@ -865,65 +924,34 @@
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false) ~> employeesource",
 						"employeesource assert(expectTrue(regexMatch(PHONE_NUMBER, '^\\\\d{3}[.]\\\\d{3}[.]\\\\d{4}$'), false, 'phnfilter', null, 'validate phn no')) ~> validatedata",
-						"validatedata split(hasError('phnfilter'),",
-						"     disjoint: false) ~> split@(invalidphonenumber, validphonenumbers)",
+						"derivedColumnForError split(HasErrorCoulam==true(),",
+						"     disjoint: false) ~> split@(invalidphonenumber, validphonenumber)",
+						"validatedata derive(HasErrorCoulam = isError()) ~> derivedColumnForError",
 						"split@invalidphonenumber sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
-						"     input(",
-						"          Series_reference as string,",
-						"          Period as string,",
-						"          Data_value as string,",
-						"          Suppressed as string,",
-						"          STATUS as string,",
-						"          UNITS as string,",
-						"          Magnitude as string,",
-						"          Subject as string,",
-						"          Group as string,",
-						"          Series_title_1 as string,",
-						"          Series_title_2 as string,",
-						"          Series_title_3 as string,",
-						"          Series_title_4 as string,",
-						"          Series_title_5 as string",
-						"     ),",
-						"     partitionFileNames:['employeewrongphnnumber.csv'],",
+						"     partitionFileNames:['erroredfile.csv'],",
 						"     umask: 0022,",
 						"     preCommands: [],",
 						"     postCommands: [],",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true,",
-						"     partitionBy('hash', 1)) ~> tablewithinvalidphnnumbers",
-						"split@validphonenumbers sink(allowSchemaDrift: true,",
+						"     partitionBy('hash', 1)) ~> sink1",
+						"split@validphonenumber sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
-						"     input(",
-						"          Series_reference as string,",
-						"          Period as string,",
-						"          Data_value as string,",
-						"          Suppressed as string,",
-						"          STATUS as string,",
-						"          UNITS as string,",
-						"          Magnitude as string,",
-						"          Subject as string,",
-						"          Group as string,",
-						"          Series_title_1 as string,",
-						"          Series_title_2 as string,",
-						"          Series_title_3 as string,",
-						"          Series_title_4 as string,",
-						"          Series_title_5 as string",
-						"     ),",
-						"     partitionFileNames:['employeevalidphnnumber.csv'],",
+						"     partitionFileNames:['noerrored.csv'],",
 						"     umask: 0022,",
 						"     preCommands: [],",
 						"     postCommands: [],",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true,",
-						"     partitionBy('hash', 1)) ~> tablewithvalidphnnumber"
+						"     partitionBy('hash', 1)) ~> noerrored"
 					]
 				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/EMPLOYEE')]",
-				"[concat(variables('factoryId'), '/datasets/DelimitedText2')]",
-				"[concat(variables('factoryId'), '/datasets/DelimitedText3')]"
+				"[concat(variables('factoryId'), '/datasets/haserror')]",
+				"[concat(variables('factoryId'), '/datasets/noerroredfile')]"
 			]
 		},
 		{
@@ -1016,13 +1044,13 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataflow": {
-								"referenceName": "dataflow1",
+								"referenceName": "assertvalidation",
 								"type": "DataFlowReference",
 								"parameters": {},
 								"datasetParameters": {
 									"employeesource": {},
-									"tablewithinvalidphnnumbers": {},
-									"tablewithvalidphnnumber": {}
+									"sink1": {},
+									"noerrored": {}
 								}
 							},
 							"staging": {},
@@ -1044,7 +1072,7 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/source_input')]",
 				"[concat(variables('factoryId'), '/datasets/data_sink')]",
-				"[concat(variables('factoryId'), '/dataflows/dataflow1')]"
+				"[concat(variables('factoryId'), '/dataflows/assertvalidation')]"
 			]
 		}
 	]
