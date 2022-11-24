@@ -34,6 +34,9 @@
 				},
 				{
 					"name": "split"
+				},
+				{
+					"name": "derivedColumnForError"
 				}
 			],
 			"scriptLines": [
@@ -54,8 +57,9 @@
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> employeesource",
 				"employeesource assert(expectTrue(regexMatch(PHONE_NUMBER, '^\\\\d{3}[.]\\\\d{3}[.]\\\\d{4}$'), false, 'phnfilter', null, 'validate phn no')) ~> validatedata",
-				"validatedata split(hasError('phnfilter'),",
+				"derivedColumnForError split(HasErrorCoulam==true(),",
 				"     disjoint: false) ~> split@(invalidphonenumber, validphonenumbers)",
+				"validatedata derive(HasErrorCoulam = isError()) ~> derivedColumnForError",
 				"split@invalidphonenumber sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
