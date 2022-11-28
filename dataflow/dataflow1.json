@@ -19,7 +19,22 @@
 					"name": "sourceLivewire"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "updatedFile",
+						"type": "DatasetReference"
+					},
+					"name": "UpdatedLivewire"
+				},
+				{
+					"dataset": {
+						"referenceName": "updatedFileWithError",
+						"type": "DatasetReference"
+					},
+					"name": "ErrorUpdatedLivewire"
+				}
+			],
 			"transformations": [
 				{
 					"name": "MatchPhoneNumber"
@@ -28,7 +43,10 @@
 					"name": "HasErrorCoulam"
 				},
 				{
-					"name": "filter1"
+					"name": "split1"
+				},
+				{
+					"name": "select1"
 				}
 			],
 			"scriptLines": [
@@ -50,7 +68,46 @@
 				"     ignoreNoFilesFound: false) ~> sourceLivewire",
 				"sourceHubspot, sourceLivewire assert(expectExists(sourceHubspot@ID == sourceLivewire@ID, false, 'Hubspot==LiveWire', null, 'comparing Hubspot and Livewire')) ~> MatchPhoneNumber",
 				"MatchPhoneNumber derive(isErrorRow = isError()) ~> HasErrorCoulam",
-				"HasErrorCoulam filter(isErrorRow==false()) ~> filter1"
+				"HasErrorCoulam split(isErrorRow==false(),",
+				"     disjoint: false) ~> split1@(HasNoError, HasError)",
+				"split1@HasNoError select(mapColumn(",
+				"          ID = split1@HasNoError@ID,",
+				"          NAME = split1@HasNoError@NAME,",
+				"          PHONE_NUMBER = split1@HasNoError@PHONE_NUMBER,",
+				"          ID = split1@HasNoError@ID,",
+				"          NAME = split1@HasNoError@NAME,",
+				"          PHONE_NUMBER = split1@HasNoError@PHONE_NUMBER",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          ID as string,",
+				"          NAME as string,",
+				"          PHONE_NUMBER as string",
+				"     ),",
+				"     partitionFileNames:['LiveWireUpdated.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> UpdatedLivewire",
+				"split1@HasError sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          ID as string,",
+				"          NAME as string,",
+				"          PHONE_NUMBER as string",
+				"     ),",
+				"     partitionFileNames:['UpdatedLiveWireWithError.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ErrorUpdatedLivewire"
 			]
 		}
 	}
