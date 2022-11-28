@@ -1,0 +1,57 @@
+{
+	"name": "dataflow1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Hubspot1",
+						"type": "DatasetReference"
+					},
+					"name": "sourceHubspot"
+				},
+				{
+					"dataset": {
+						"referenceName": "Livewire",
+						"type": "DatasetReference"
+					},
+					"name": "sourceLivewire"
+				}
+			],
+			"sinks": [],
+			"transformations": [
+				{
+					"name": "MatchPhoneNumber"
+				},
+				{
+					"name": "HasErrorCoulam"
+				},
+				{
+					"name": "filter1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          ID as integer,",
+				"          NAME as string,",
+				"          PHONE_NUMBER as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> sourceHubspot",
+				"source(output(",
+				"          ID as integer,",
+				"          NAME as string,",
+				"          PHONE_NUMBER as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> sourceLivewire",
+				"sourceHubspot, sourceLivewire assert(expectExists(sourceHubspot@ID == sourceLivewire@ID, false, 'Hubspot==LiveWire', null, 'comparing Hubspot and Livewire')) ~> MatchPhoneNumber",
+				"MatchPhoneNumber derive(isErrorRow = isError()) ~> HasErrorCoulam",
+				"HasErrorCoulam filter(isErrorRow==false()) ~> filter1"
+			]
+		}
+	}
+}
